@@ -1,0 +1,61 @@
+{
+  "locale": [
+    "en"
+  ],
+  "service": "CRM",
+  "storage": false,
+  "type": "personal",
+  "whiteListedDomains": [
+    "https://proweblook.com"
+  ],
+  "modules": {
+    "widgets": [
+      {
+        "location": "crm.leads.detail.relatedlist",
+        "name": "ProWebLook Lead Verifier",
+        "url": "/app/widget.html",
+        "logo": "/app/img/logo.svg"
+      },
+      {
+        "location": "crm.contacts.detail.relatedlist",
+        "name": "ProWebLook Contact Verifier",
+        "url": "/app/widget.html",
+        "logo": "/app/img/logo.svg"
+      },
+      {
+        "location": "crm.deals.detail.relatedlist",
+        "name": "ProWebLook Deal Risk Guard",
+        "url": "/app/widget.html",
+        "logo": "/app/img/logo.svg"
+      },
+      {
+        "location": "crm.webtab",
+        "name": "ProWebLook Bulk Enrich",
+        "url": "/app/widget.html?mode=bulk",
+        "logo": "/app/img/logo.svg"
+      }
+    ],
+    "buttons": [],
+    "tabs": []
+  },
+  "connectors": [],
+  "config": [
+    {
+      "name": "ProWebLook API Key",
+      "type": "text",
+      "secure": true,
+      "mandatory": true,
+      "userdefined": true,
+      "api_name": "proweblook.api_key"
+    },
+    {
+      "name": "Default Country Code (ISO-2, e.g. IN or US)",
+      "type": "text",
+      "secure": false,
+      "mandatory": false,
+      "userdefined": true,
+      "api_name": "proweblook.default_country_code"
+    }
+  ],
+  "moduleSupport": true
+}

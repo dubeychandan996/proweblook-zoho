@@ -1,0 +1,33 @@
+{
+  "name": "proweblook-zoho-extension",
+  "version": "1.0.0",
+  "description": "ProWebLook for Zoho CRM & Zoho Bigin — Embedded CRM Widget (Zoho Sigma / ZET) + Deluge Workflow & Bigin Custom Functions for Email, Phone Carrier/VoIP, Silent WhatsApp & Caller ID verification",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://proweblook.com/zoho",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dubeychandan996/proweblook-zoho.git"
+  },
+  "scripts": {
+    "test": "node --test test/zoho-extension.test.mjs",
+    "validate": "node scripts/validate-package.mjs",
+    "pack:zip": "node scripts/package-zip.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "zoho",
+    "zoho-crm",
+    "zoho-bigin",
+    "zoho-marketplace",
+    "zoho-sigma",
+    "deluge",
+    "email-verification",
+    "phone-validation",
+    "whatsapp",
+    "caller-id",
+    "proweblook"
+  ]
+}

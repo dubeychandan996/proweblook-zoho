@@ -1,0 +1,82 @@
+// ProWebLook Contact Verifier — Zoho Bigin Workflow Custom Function (Deluge)
+// Setup: Zoho Bigin -> Settings -> Toppings / Workflows -> Contacts (On Create) -> Custom Function
+// Arguments: contactId (string -> Contacts.Contact Id), apiKey (string -> ProWebLook API Key)
+
+void verifyBiginContact(string contactId, string apiKey)
+{
+	cleanKey = ifnull(apiKey, "").trim();
+	if(cleanKey == "")
+	{
+		return;
+	}
+	contactResp = zoho.bigin.getRecordById("Contacts", contactId.toLong());
+	if(contactResp.get("data") == null || contactResp.get("data").size() == 0)
+	{
+		return;
+	}
+	row = contactResp.get("data").get(0);
+	email = ifnull(row.get("Email"), "").trim();
+	phone = ifnull(row.get("Mobile"), ifnull(row.get("Phone"), "")).trim();
+	headers = {"Authorization":"Bearer " + cleanKey,"Content-Type":"application/json"};
+
+	emailVerdict = "n/a";
+	phoneVerdict = "n/a";
+	waVerdict = "n/a";
+
+	if(email != "")
+	{
+		eResp = invokeurl
+		[
+			url :"https://proweblook.com/api/v1/zoho/verify_email"
+			type :POST
+			parameters:{"email":email}.toString()
+			headers:headers
+		];
+		if(eResp.get("ok") == true)
+		{
+			emailVerdict = eResp.get("data").get("verdict");
+		}
+	}
+
+	if(phone != "")
+	{
+		pBody = Map();
+		pBody.put("phone_number", phone);
+		if(!phone.startsWith("+"))
+		{
+			pBody.put("country_code", "IN");
+		}
+		pResp = invokeurl
+		[
+			url :"https://proweblook.com/api/v1/zoho/validate_phone"
+			type :POST
+			parameters:pBody.toString()
+			headers:headers
+		];
+		if(pResp.get("ok") == true)
+		{
+			phoneVerdict = pResp.get("data").get("verdict");
+			if(phoneVerdict != "invalid")
+			{
+				waResp = invokeurl
+				[
+					url :"https://proweblook.com/api/v1/zoho/check_whatsapp"
+					type :POST
+					parameters:{"phone_number":pResp.get("data").get("phone_number")}.toString()
+					headers:headers
+				];
+				if(waResp.get("ok") == true)
+				{
+					waVerdict = waResp.get("data").get("verdict");
+				}
+			}
+		}
+	}
+
+	verdict = if(emailVerdict == "undeliverable" || phoneVerdict == "invalid", "BLOCK", if(waVerdict == "on_whatsapp", "APPROVE", "REVIEW"));
+	existingDesc = ifnull(row.get("Description"), "");
+	summaryLine = "[ProWebLook " + verdict + "] Email: " + emailVerdict + " | Phone: " + phoneVerdict + " | WhatsApp: " + waVerdict;
+	upd = Map();
+	upd.put("Description", if(existingDesc == "", summaryLine, existingDesc + "\n" + summaryLine));
+	zoho.bigin.updateRecord("Contacts", contactId, upd);
+}

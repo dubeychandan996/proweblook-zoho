@@ -1,0 +1,115 @@
+// ProWebLook Lead Verifier — Zoho CRM Workflow Rule Custom Function (Deluge)
+// Setup: Zoho CRM -> Setup -> Automation -> Workflow Rules -> Leads (On Create) -> Instant Actions -> Function
+// Argument mapping: leadId -> Leads.Lead Id
+// Org variables: proweblook.api_key (secure), proweblook.default_country_code (optional, e.g. IN or US)
+
+void verifyLeadWithProweblook(string leadId)
+{
+	apiKey = ifnull(zoho.crm.getOrgVariable("proweblook.api_key"), "").trim();
+	if(apiKey == "")
+	{
+		info "ProWebLook skipped: set proweblook.api_key org variable first.";
+		return;
+	}
+	defaultCountry = ifnull(zoho.crm.getOrgVariable("proweblook.default_country_code"), "IN").trim().upper();
+	lead = zoho.crm.getRecordById("Leads", leadId.toLong());
+	email = ifnull(lead.get("Email"), "").trim();
+	phone = ifnull(lead.get("Mobile"), ifnull(lead.get("Phone"), "")).trim();
+	headers = {"Authorization":"Bearer " + apiKey,"Content-Type":"application/json"};
+
+	emailVerdict = "not_checked";
+	phoneVerdict = "not_checked";
+	waVerdict = "not_checked";
+	callerName = "";
+	score = 50;
+	hardBlock = false;
+
+	if(email != "")
+	{
+		eResp = invokeurl
+		[
+			url :"https://proweblook.com/api/v1/zoho/verify_email"
+			type :POST
+			parameters:{"email":email}.toString()
+			headers:headers
+		];
+		if(eResp.get("ok") == true)
+		{
+			emailVerdict = eResp.get("data").get("verdict");
+			if(emailVerdict == "deliverable")
+			{
+				score = score + 20;
+			}
+			else if(emailVerdict == "unknown")
+			{
+				score = score - 5;
+			}
+			else if(emailVerdict == "undeliverable")
+			{
+				score = score - 35;
+				hardBlock = true;
+			}
+		}
+	}
+
+	if(phone != "")
+	{
+		pBody = Map();
+		pBody.put("phone_number", phone);
+		if(!phone.startsWith("+"))
+		{
+			pBody.put("country_code", defaultCountry);
+		}
+		pResp = invokeurl
+		[
+			url :"https://proweblook.com/api/v1/zoho/validate_phone"
+			type :POST
+			parameters:pBody.toString()
+			headers:headers
+		];
+		if(pResp.get("ok") == true)
+		{
+			pData = pResp.get("data");
+			phoneVerdict = pData.get("verdict");
+			if(phoneVerdict == "valid")
+			{
+				score = score + 15;
+				e164 = pData.get("phone_number");
+				waResp = invokeurl
+				[
+					url :"https://proweblook.com/api/v1/zoho/check_whatsapp"
+					type :POST
+					parameters:{"phone_number":e164}.toString()
+					headers:headers
+				];
+				if(waResp.get("ok") == true)
+				{
+					waVerdict = waResp.get("data").get("verdict");
+					if(waVerdict == "on_whatsapp")
+					{
+						score = score + 15;
+					}
+					else
+					{
+						score = score - 12;
+					}
+				}
+			}
+			else if(phoneVerdict == "invalid")
+			{
+				score = score - 35;
+				hardBlock = true;
+			}
+		}
+	}
+
+	boundedScore = max(0, min(100, score));
+	status = if(hardBlock || boundedScore < 35, "BLOCK", if(boundedScore >= 70, "APPROVE", "REVIEW"));
+
+	noteMap = Map();
+	noteMap.put("Parent_Id", leadId.toLong());
+	noteMap.put("Note_Title", "ProWebLook " + status + " (" + boundedScore + "/100)");
+	noteMap.put("Note_Content", "Email: " + emailVerdict + " | Phone: " + phoneVerdict + " | Silent WhatsApp: " + waVerdict);
+	noteMap.put("se_module", "Leads");
+	zoho.crm.createRecord("Notes", noteMap);
+}

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ProWebLook Lead &amp; WhatsApp Verifier for Zoho CRM</title>
+    <link rel="stylesheet" href="./css/widget.css">
+    <script src="https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js"></script>
+  </head>
+  <body>
+    <div class="pwl-shell" id="pwl-zoho-root">
+      <header class="pwl-header">
+        <div class="pwl-brand">
+          <img src="./img/logo.svg" alt="">
+          <span>ProWebLook for Zoho CRM &amp; Bigin</span>
+        </div>
+        <span id="pwl-context-pill">Ready</span>
+      </header>
+
+      <nav class="pwl-tabs" role="tablist" aria-label="ProWebLook Zoho modes">
+        <button type="button" class="pwl-tab" role="tab" data-tab="record" aria-selected="true">Record Card</button>
+        <button type="button" class="pwl-tab" role="tab" data-tab="bulk" aria-selected="false">Bulk Enrich</button>
+        <button type="button" class="pwl-tab" role="tab" data-tab="deluge" aria-selected="false">Deluge Workflows</button>
+        <button type="button" class="pwl-tab" role="tab" data-tab="settings" aria-selected="false">Credits &amp; Key</button>
+      </nav>
+
+      <section class="pwl-panel" data-panel="record">
+        <div class="pwl-row">
+          <div class="pwl-field">
+            <label for="pwl-rec-name">Lead / Contact Name</label>
+            <input id="pwl-rec-name" type="text" placeholder="e.g. Priya Sharma">
+          </div>
+          <div class="pwl-field">
+            <label for="pwl-rec-email">Email Address</label>
+            <input id="pwl-rec-email" type="email" placeholder="priya@company.in">
+          </div>
+          <div class="pwl-field">
+            <label for="pwl-rec-phone">Phone / Mobile</label>
+            <input id="pwl-rec-phone" type="text" placeholder="+919876543210 or 9876543210">
+          </div>
+          <div class="pwl-field">
+            <label for="pwl-rec-country">Country (ISO-2)</label>
+            <input id="pwl-rec-country" type="text" maxlength="2" value="IN">
+          </div>
+        </div>
+
+        <div class="pwl-checks">
+          <label><input type="checkbox" id="pwl-chk-email" checked> Verify Email (1 cr)</label>
+          <label><input type="checkbox" id="pwl-chk-phone" checked> Phone Carrier &amp; VoIP (1 cr)</label>
+          <label><input type="checkbox" id="pwl-chk-wa" checked> Silent WhatsApp (1 cr)</label>
+          <label><input type="checkbox" id="pwl-chk-caller"> Caller ID CNAM (1 cr)</label>
+        </div>
+
+        <div class="pwl-actions">
+          <button type="button" class="pwl-btn pwl-btn-primary" id="pwl-btn-verify">Run Verification</button>
+          <button type="button" class="pwl-btn" id="pwl-btn-save-crm" disabled>Write Note &amp; Tag to Zoho CRM</button>
+        </div>
+
+        <div id="pwl-record-status" class="pwl-status" role="status"></div>
+        <div id="pwl-record-output" class="pwl-verdict-box" hidden></div>
+      </section>
+
+      <section class="pwl-panel" data-panel="bulk" hidden>
+        <div class="pwl-row">
+          <div class="pwl-field">
+            <label for="pwl-bulk-module">Zoho CRM Module</label>
+            <select id="pwl-bulk-module">
+              <option value="Leads">Leads</option>
+              <option value="Contacts">Contacts</option>
+            </select>
+          </div>
+          <div class="pwl-field">
+            <label for="pwl-bulk-limit">Max Unverified Records</label>
+            <select id="pwl-bulk-limit">
+              <option value="25">25 records</option>
+              <option value="50" selected>50 records</option>
+              <option value="100">100 records</option>
+            </select>
+          </div>
+        </div>
+        <div class="pwl-actions">
+          <button type="button" class="pwl-btn pwl-btn-primary" id="pwl-btn-bulk-run">Scan &amp; Enrich Unverified Records</button>
+        </div>
+        <div id="pwl-bulk-status" class="pwl-status" role="status"></div>
+        <table class="pwl-table" id="pwl-bulk-table" hidden>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>WhatsApp</th>
+              <th>Score</th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody id="pwl-bulk-tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="pwl-panel" data-panel="deluge" hidden>
+        <p style="margin-top:0">Automate verification on every new Lead in <strong>Zoho CRM</strong> or <strong>Zoho Bigin</strong> using zero-dependency Deluge custom functions:</p>
+        <div class="pwl-actions">
+          <button type="button" class="pwl-btn" data-deluge-copy="crm">Copy Zoho CRM Workflow Deluge</button>
+          <button type="button" class="pwl-btn" data-deluge-copy="bigin">Copy Zoho Bigin Deluge</button>
+        </div>
+        <pre class="pwl-code" id="pwl-deluge-preview"></pre>
+      </section>
+
+      <section class="pwl-panel" data-panel="settings" hidden>
+        <div class="pwl-row">
+          <div class="pwl-field">
+            <label for="pwl-api-key">ProWebLook API Key (or Zoho Org Variable <code>proweblook.api_key</code>)</label>
+            <input id="pwl-api-key" type="password" autocomplete="off" placeholder="Paste ProWebLook API key">
+          </div>
+          <div class="pwl-field">
+            <label for="pwl-default-country">Default Country Code (ISO-2)</label>
+            <input id="pwl-default-country" type="text" maxlength="2" value="IN">
+          </div>
+        </div>
+        <div class="pwl-actions">
+          <button type="button" class="pwl-btn pwl-btn-primary" id="pwl-btn-save-key">Save &amp; Check Credit Balances (Free)</button>
+        </div>
+        <div id="pwl-settings-status" class="pwl-status" role="status"></div>
+        <div id="pwl-balances-output" class="pwl-signals"></div>
+      </section>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
