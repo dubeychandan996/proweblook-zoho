@@ -2,8 +2,8 @@ export const ZOHO_CRM_DELUGE_SNIPPET = `// Zoho CRM -> Setup -> Automation -> Wo
 // Arguments: leadId (int/string, mapped to Leads -> Lead Id)
 void verifyLeadWithProweblook(string leadId)
 {
-\tapiKey = zoho.crm.getOrgVariable("proweblook.api_key");
-\tdefaultCountry = ifnull(zoho.crm.getOrgVariable("proweblook.default_country_code"),"IN");
+\tapiKey = ifnull(zoho.crm.getOrgVariable("proweblook__api_key"), zoho.crm.getOrgVariable("proweblook.api_key"));
+\tdefaultCountry = ifnull(zoho.crm.getOrgVariable("proweblook__default_country_code"),"IN");
 \tlead = zoho.crm.getRecordById("Leads", leadId.toLong());
 \temail = ifnull(lead.get("Email"),"").trim();
 \tphone = ifnull(lead.get("Mobile"), ifnull(lead.get("Phone"),"")).trim();

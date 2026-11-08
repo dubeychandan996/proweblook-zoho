@@ -105,16 +105,29 @@ async function loadOrgVariables() {
 
   const sdk = getZohoSdk();
   if (sdk?.CRM?.API?.getOrgVariable) {
-    try {
-      const keyResp = await sdk.CRM.API.getOrgVariable('proweblook.api_key');
-      const orgKey = sanitizeApiKey(keyResp?.Success?.Content || '');
-      if (orgKey) state.apiKey = orgKey;
-
-      const ccResp = await sdk.CRM.API.getOrgVariable('proweblook.default_country_code');
-      const orgCc = sanitizeCountryCode(ccResp?.Success?.Content || '');
-      if (orgCc) state.defaultCountry = orgCc;
-    } catch (_err) {
-      // Org variables are optional when user supplies session key in Settings tab.
+    for (const keyVar of ['proweblook__api_key', 'proweblook.api_key']) {
+      try {
+        const keyResp = await sdk.CRM.API.getOrgVariable(keyVar);
+        const orgKey = sanitizeApiKey(keyResp?.Success?.Content || '');
+        if (orgKey) {
+          state.apiKey = orgKey;
+          break;
+        }
+      } catch (_err) {
+        // Ignore unconfigured variable name variant.
+      }
+    }
+    for (const ccVar of ['proweblook__default_country_code', 'proweblook.default_country_code']) {
+      try {
+        const ccResp = await sdk.CRM.API.getOrgVariable(ccVar);
+        const orgCc = sanitizeCountryCode(ccResp?.Success?.Content || '');
+        if (orgCc) {
+          state.defaultCountry = orgCc;
+          break;
+        }
+      } catch (_err) {
+        // Ignore unconfigured variable name variant.
+      }
     }
   }
 
@@ -349,6 +362,16 @@ async function saveKeyAndCheckBalance() {
     sessionStorage.setItem(STORAGE_KEY_COUNTRY, cc);
   } catch (_err) {
     // Ignore sandboxed storage failure.
+  }
+
+  const sdk = getZohoSdk();
+  if (sdk?.CRM?.API?.setOrgVariable) {
+    try {
+      await sdk.CRM.API.setOrgVariable({ apiname: 'proweblook__api_key', value: key });
+      await sdk.CRM.API.setOrgVariable({ apiname: 'proweblook__default_country_code', value: cc });
+    } catch (_err) {
+      // Non-admin CRM users can still verify with sessionStorage key.
+    }
   }
 
   setStatus('pwl-settings-status', 'Checking ProWebLook credit balances (0 credits)...', 'info');

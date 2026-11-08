@@ -1,17 +1,17 @@
 // ProWebLook Lead Verifier — Zoho CRM Workflow Rule Custom Function (Deluge)
 // Setup: Zoho CRM -> Setup -> Automation -> Workflow Rules -> Leads (On Create) -> Instant Actions -> Function
 // Argument mapping: leadId -> Leads.Lead Id
-// Org variables: proweblook.api_key (secure), proweblook.default_country_code (optional, e.g. IN or US)
+// Org variables: proweblook__api_key (Marketplace extension) or proweblook.api_key (standalone), proweblook__default_country_code
 
 void verifyLeadWithProweblook(string leadId)
 {
-	apiKey = ifnull(zoho.crm.getOrgVariable("proweblook.api_key"), "").trim();
+	apiKey = ifnull(zoho.crm.getOrgVariable("proweblook__api_key"), ifnull(zoho.crm.getOrgVariable("proweblook.api_key"), "")).trim();
 	if(apiKey == "")
 	{
-		info "ProWebLook skipped: set proweblook.api_key org variable first.";
+		info "ProWebLook skipped: set proweblook__api_key org variable first.";
 		return;
 	}
-	defaultCountry = ifnull(zoho.crm.getOrgVariable("proweblook.default_country_code"), "IN").trim().upper();
+	defaultCountry = ifnull(zoho.crm.getOrgVariable("proweblook__default_country_code"), ifnull(zoho.crm.getOrgVariable("proweblook.default_country_code"), "IN")).trim().upper();
 	lead = zoho.crm.getRecordById("Leads", leadId.toLong());
 	email = ifnull(lead.get("Email"), "").trim();
 	phone = ifnull(lead.get("Mobile"), ifnull(lead.get("Phone"), "")).trim();
